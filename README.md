@@ -97,7 +97,24 @@ node server.js
 サーバが起動したら、ブラウザで 'http://localhost:3000' にアクセスして、PostgreSQL から取得したデータが表示されることを確認します。
 
 
-
+### ディレクトリ
+```
+my-app/
+├── node_modules/          # インストールされたモジュール
+├── public/                # 静的ファイル（HTML, CSS, JS など）
+│   ├── css/               # CSS ファイル
+│   │   └── style.css      # スタイルシート
+│   ├── js/                # JavaScript ファイル
+│   │   └── input.js       # フォーム用 JavaScript
+│   ├── index.html         # 入力フォーム用の HTML ファイル（例えば、登録フォーム）
+│   ├── login.html         # ログインフォーム用の HTML ファイル
+├── routes/                # API やルーティング関連のファイル
+│   └── index.js           # ルート処理のエントリーポイント
+├── views/                 # EJS や Pug などのテンプレートファイル（オプション）
+├── app.js                 # Express アプリケーションのエントリーポイント
+├── package.json           # パッケージの依存関係など
+└── .gitignore             # Git の無視リスト
+```
 
 
 
