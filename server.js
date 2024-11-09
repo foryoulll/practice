@@ -1,11 +1,11 @@
 const express = require('express');
-const { Client } = require('pg');
+const { Pool } = require('pg');
 
 const app = express();
 const port = 3000;
 
 // PostgreSQL クライアントの設定
-const client = new Client({
+const pool = new Pool({
   user: 'postgres',  // PostgreSQL のユーザー名
   host: 'localhost',     // PostgreSQL のホスト名（通常は localhost）
   database: 'postgres', // 使用するデータベース名
@@ -14,15 +14,15 @@ const client = new Client({
 });
 
 // PostgreSQL に接続
-client.connect();
+pool.connect();
 
-// HTML ファイルを静的ファイルとして提供
-app.use(express.static('public'));
+app.use(express.json());
+app.use(express.static("public")); // login.htmlを配置したディレクトリ
 
 // サンプルの GET エンドポイント（データベースから情報を取得）
 app.get('/data', async (req, res) => {
   try {
-    const result = await client.query('SELECT * FROM schema1.users');
+    const result = await pool.query('SELECT * FROM schema1.users');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -30,7 +30,31 @@ app.get('/data', async (req, res) => {
   }
 });
 
+// POST /login エンドポイント
+app.post("/login", async (req, res) => {
+  const { email } = req.body;
+  console.log("リクエスト受信:", email);  // 確認用ログ
+
+  try {
+      const query = "SELECT email FROM schema1.users WHERE email = $1";
+      const result = await pool.query(query, [email]);
+
+      console.log("クエリ結果:", result.rows);  // 確認用ログ
+      
+      if (result.rows.length > 0) {
+          res.send("成功");
+      } else {
+          res.send("メールアドレスが見つかりませんでした");
+      }
+  } catch (error) {
+      console.error("エラー:", error);
+      res.status(500).send("サーバーエラーが発生しました");
+  }
+});
+
+
 // サーバを起動
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+
