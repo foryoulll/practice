@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostgreSQL Data</title>
+</head>
+<body>
+    <h1>PostgreSQL から取得したデータ</h1>
+    <ul id="data-list"></ul>
+
+    <script>
+        // サーバからデータを取得
+        fetch('/data')
+            .then(response => response.json())
+            .then(data => {
+                const dataList = document.getElementById('data-list');
+                data.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item.name;  // ここでテーブルのカラムに合わせて表示
+                    dataList.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    </script>
+</body>
+</html>
+

@@ -13,8 +13,22 @@ const pool = new Pool({
   port: 5432,            // PostgreSQL のポート
 });
 
+// PostgreSQL に接続
+pool.connect();
+
 app.use(express.json());
 app.use(express.static("public")); // login.htmlを配置したディレクトリ
+
+// サンプルの GET エンドポイント（データベースから情報を取得）
+app.get('/data', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM schema1.users');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Database error');
+  }
+});
 
 // POST /login エンドポイント
 app.post("/login", async (req, res) => {
