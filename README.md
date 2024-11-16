@@ -115,6 +115,3 @@ my-app/
 ├── package.json           # パッケージの依存関係など
 └── .gitignore             # Git の無視リスト
 ```
-
-
-

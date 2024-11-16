@@ -34,14 +34,14 @@ app.get("/dashboard", (req, res) => {
             <a href="/logout">Log out</a>
         `);
     } else {
-        res.redirect("/sign_in"); // セッションがない場合、サインインページにリダイレクト
+        res.redirect("/sign_in.html"); // セッションがない場合、サインインページにリダイレクト
     }
 });
 
 // ログアウト処理
 app.get("/logout", (req, res) => {
     req.session.destroy(() => {
-        res.redirect("/sign_in"); // ログアウト後はサインインページにリダイレクト
+        res.redirect("/sign_in.html"); // ログアウト後はサインインページにリダイレクト
     });
 });
 
