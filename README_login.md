@@ -135,3 +135,26 @@ app.listen(PORT, () => {
     "name": "John Doe"
 }
 ```
+
+
+### ディレクトリ構成
+・controllers/ フォルダには、各機能（認証処理など）のロジックをまとめたファイルを格納します。
+・routes/ フォルダには、ルーティング処理をまとめたファイルを格納します。
+・models/ フォルダには、データベースの処理を管理するファイルを格納します。
+・config/ フォルダには、環境設定やデータベース接続などの設定ファイルを格納します。
+```
+project/
+├── controllers/
+│   ├── authController.js
+├── routes/
+│   ├── authRoutes.js
+├── models/
+│   ├── userModel.js
+├── config/
+│   ├── dbConfig.js
+├── public/
+│   ├── sign_in.html
+│   ├── sign_up.html
+├── .env
+├── app.js
+```
