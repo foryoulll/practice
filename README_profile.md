@@ -1,3 +1,20 @@
+# プロフィール画面作成メモ
+
+## 画像の編集
+### ・Multer: 画像ファイルのアップロード処理
+#### プロジェクトの初期化
+```
+mkdir image-storage
+cd image-storage
+npm init -y
+```
+　必要なパッケージをインストール
+```
+npm install express pg multer body-parser
+```
+
+#### コード実装 app.js
+```
 const express = require("express");
 const bodyParser = require("body-parser");
 const multer = require("multer");
@@ -6,10 +23,10 @@ const path = require("path");
 
 const app = express();
 const pool = new Pool({
-  user: "postgres",
+  user: "your_user",
   host: "localhost",
-  database: "postgres",
-  password: "postgres",
+  database: "your_database",
+  password: "your_password",
   port: 5432,
 });
 
@@ -18,12 +35,11 @@ const upload = multer({ dest: "uploads/" });
 // ミドルウェア設定
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.set("view engine", "ejs");
 
 // 画像アップロードフォーム
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "image_index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // 画像アップロード処理
@@ -33,7 +49,7 @@ app.post("/upload", upload.single("image"), async (req, res) => {
   
   try {
     await pool.query(
-      "INSERT INTO schema1.images (name, type, path) VALUES ($1, $2, $3)",
+      "INSERT INTO images (name, type, path) VALUES ($1, $2, $3)",
       [originalname, mimetype, filePath]
     );
     res.redirect("/gallery");
@@ -46,7 +62,7 @@ app.post("/upload", upload.single("image"), async (req, res) => {
 // 保存された画像の一覧表示
 app.get("/gallery", async (req, res) => {
   try {
-    const { rows: images } = await pool.query("SELECT * FROM schema1.images");
+    const { rows: images } = await pool.query("SELECT * FROM images");
     res.render("gallery", { images });
   } catch (err) {
     console.error(err);
@@ -59,3 +75,13 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+```
+
+#### APIテスト
+1.画像のアップロード
+　・POST /upload
+　・フォームデータとしてimageキーにファイルを含めて送信。
+2.画像の取得
+　・GET /image/:id
+　・保存された画像のIDを指定して取得。

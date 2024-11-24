@@ -10,4 +10,3 @@ router.post("/sign_up", authController.signUp);
 router.post("/sign_in", authController.signIn);
 
 module.exports = router;
-
