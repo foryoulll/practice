@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Gallery</title>
+</head>
+<body>
+  <h1>Image Gallery</h1>
+
+  <% if (images && images.length > 0) { %>
+    <div>
+      <% images.forEach(function(image) { %>
+        <div>
+          <!-- 画像のパスが正しく表示されるように修正 -->
+          <img src="/uploads/<%= image.path.split('/')[1] %>" alt="<%= image.name %>" style="width: 200px; height: auto;">
+          <p><%= image.name %></p>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <p>No images found.</p>
+  <% } %>
+
+  <a href="/">Go back to upload</a>
+</body>
+</html>
