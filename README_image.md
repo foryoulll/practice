@@ -113,11 +113,3 @@ gallery.ejs（画像出力）
 </body>
 </html>
 ```
-
-画像サイズを圧縮するライブラリを使用するのがおすすめです。
-
-例: Sharpを使用した圧縮
-
-bash
-コードをコピーする
-npm install sharp
