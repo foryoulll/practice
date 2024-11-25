@@ -33,17 +33,23 @@ const signIn = async (req, res) => {
             const match = await bcrypt.compare(password, user.password);
 
             if (match) {
-                req.session.user = user;
-                res.redirect("/dashboard");
+                // 必要な情報のみセッションに保存
+                req.session.user = {
+                    id: user.id, // schema1.usersのid
+                    name: user.name, // schema1.usersのname
+                };
+
+                // サインイン後、アップロードページにリダイレクト
+                res.redirect("/upload_image.html");
             } else {
-                res.send("<h1>Invalid credentials</h1><p><a href='/sign_in.html'>Go back to sign in</a></p>");
+                res.status(401).send("<h1>Invalid credentials</h1><p><a href='/sign_in.html'>Go back to sign in</a></p>");
             }
         } else {
-            res.send("<h1>Invalid credentials</h1><p><a href='/sign_in.html'>Go back to sign in</a></p>");
+            res.status(401).send("<h1>Invalid credentials</h1><p><a href='/sign_in.html'>Go back to sign in</a></p>");
         }
     } catch (err) {
         console.error("Error during sign in:", err);
-        res.status(500).send("Internal server error");
+        res.status(500).send("Internal server error. Please try again later.");
     }
 };
 

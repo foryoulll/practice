@@ -1,21 +1,21 @@
-// app.js
 const express = require("express");
 const bodyParser = require("body-parser");
 const session = require("express-session");
 const path = require("path");
 const dotenv = require("dotenv");
 const multer = require("multer");
-
-const pool = require("./config/dbConfig"); // dbConfig.js から pool をインポート
-dotenv.config();  // .envファイルを読み込む
-
+const pool = require("./config/dbConfig");
 const authRoutes = require("./routes/authRoutes");
+
+dotenv.config(); // .envファイルを読み込む
 
 const app = express();
 
+// ミドルウェア設定
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
+
 app.use(
     session({
         secret: process.env.SESSION_SECRET,
@@ -24,33 +24,30 @@ app.use(
     })
 );
 
-// ルーティングを設定
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.set("view engine", "ejs");
+
+// セッションチェックミドルウェア
+const ensureAuthenticated = (req, res, next) => {
+    if (!req.session.user) {
+        return res.redirect("/sign_in.html");
+    }
+    next();
+};
+
+// ルーティング設定
 app.use(authRoutes);
 
-// ダッシュボードページ
-app.get("/dashboard", (req, res) => {
+// ホーム (ログイン状態をチェックしてリダイレクト)
+app.get("/", (req, res) => {
     if (req.session.user) {
-        res.send(`
-            <h1>Welcome, ${req.session.user.name}!</h1>
-            <p>This is your personalized dashboard.</p>
-            <a href="/logout">Log out</a>
-        `);
+        res.sendFile(path.join(__dirname, "public", "upload_image.html")); // サインイン後、アップロードページに移動
     } else {
-        res.redirect("/sign_in.html"); // セッションがない場合、サインインページにリダイレクト
+        res.redirect("/sign_in.html"); // 未ログインの場合はサインインページへ
     }
 });
 
-// ログアウト処理
-app.get("/logout", (req, res) => {
-    req.session.destroy(() => {
-        res.redirect("/sign_in.html"); // ログアウト後はサインインページにリダイレクト
-    });
-});
-
-// image用ミドルウェア設定
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.set("view engine", "ejs");
-
+// ファイルアップロード設定
 const upload = multer({
     dest: "uploads/",
     fileFilter: (req, file, cb) => {
@@ -62,13 +59,8 @@ const upload = multer({
     },
 });
 
-// 画像アップロードフォーム
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "upload_image.html"));
-});
-
 // 画像アップロード処理
-app.post("/upload", upload.single("image"), async (req, res) => {
+app.post("/upload", ensureAuthenticated, upload.single("image"), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).send("No file uploaded.");
@@ -76,10 +68,11 @@ app.post("/upload", upload.single("image"), async (req, res) => {
 
         const { originalname, mimetype, filename } = req.file;
         const filePath = path.join("uploads", filename);
+        const userId = req.session.user.id;
 
         await pool.query(
-            "INSERT INTO schema1.images (name, type, path) VALUES ($1, $2, $3)",
-            [originalname, mimetype, filePath]
+            "INSERT INTO schema1.images (name, type, path, user_id) VALUES ($1, $2, $3, $4)",
+            [originalname, mimetype, filePath, userId]
         );
 
         res.redirect("/gallery");
@@ -89,16 +82,26 @@ app.post("/upload", upload.single("image"), async (req, res) => {
     }
 });
 
+// 画像ギャラリー
+app.get("/gallery", ensureAuthenticated, async (req, res) => {
+    try {
+        const userId = req.session.user.id;
+        const { rows: images } = await pool.query(
+            "SELECT * FROM schema1.images WHERE user_id = $1",
+            [userId]
+        );
+        res.render("gallery", { images });
+    } catch (err) {
+        console.error("Error retrieving images:", err);
+        res.status(500).send("Error retrieving images.");
+    }
+});
 
-// 保存された画像の一覧表示
-app.get("/gallery", async (req, res) => {
-  try {
-    const { rows: images } = await pool.query("SELECT * FROM schema1.images");
-    res.render("gallery", { images });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error retrieving images.");
-  }
+// ログアウト処理
+app.get("/logout", (req, res) => {
+    req.session.destroy(() => {
+        res.redirect("/sign_in.html");
+    });
 });
 
 // サーバー起動

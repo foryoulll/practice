@@ -1,3 +1,4 @@
+### 画像出力
 必要なパッケージ
 以下のパッケージを使用します。事前にインストールしてください。
 
@@ -112,4 +113,17 @@ gallery.ejs（画像出力）
   <a href="/">Go back to upload</a>
 </body>
 </html>
+```
+
+### ディレクトリ構成
+```
+project/
+├── app.js
+├── uploads/         # ここに実画像データが保存される
+├── public/
+│   ├── upload_image.html
+├── views/
+│   ├── gallery.ejs
+├── config/
+│   ├── dbConfig.js
 ```
