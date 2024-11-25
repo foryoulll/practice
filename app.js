@@ -4,8 +4,12 @@ const session = require("express-session");
 const path = require("path");
 const dotenv = require("dotenv");
 const multer = require("multer");
+
+const sharp = require("sharp");
 const pool = require("./config/dbConfig");
 const authRoutes = require("./routes/authRoutes");
+
+const fs = require("fs");
 
 dotenv.config(); // .envファイルを読み込む
 
@@ -47,16 +51,16 @@ app.get("/", (req, res) => {
     }
 });
 
-// ファイルアップロード設定
+// multerの設定
 const upload = multer({
-    dest: "uploads/",
+    dest: "uploads/temp/",  // 一時的に保存するディレクトリ
     fileFilter: (req, file, cb) => {
         const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
         if (!allowedTypes.includes(file.mimetype)) {
-            return cb(new Error("Invalid file type."));
+            return cb(new Error("Invalid file type."));  // サポートされていない形式
         }
         cb(null, true);
-    },
+    }
 });
 
 // 画像アップロード処理
@@ -80,18 +84,21 @@ app.get("/gallery", async (req, res) => {
     }
 });
 
-// 画像アップロード処理 (最大9枚まで)
+// 画像アップロード処理
 app.post("/upload", upload.single("image"), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).send("No file uploaded.");
         }
+
+        // ユーザーがログインしているか確認
         if (!req.session.user) {
             return res.status(401).send("You must be logged in to upload images.");
         }
 
-        // ユーザーの画像枚数をチェック
         const userId = req.session.user.id;
+
+        // ユーザーの画像枚数をチェック 9枚まで
         const { rows: imageCount } = await pool.query(
             "SELECT COUNT(*) FROM schema1.images WHERE user_id = $1",
             [userId]
@@ -101,10 +108,24 @@ app.post("/upload", upload.single("image"), async (req, res) => {
             return res.status(400).send("You can only upload up to 9 images.");
         }
 
-        const { originalname, mimetype, filename } = req.file;
-        const filePath = path.join("uploads", filename);
+        // 一時ディレクトリのファイルパス
+        const originalFilePath = path.join(__dirname, "uploads/temp", req.file.filename);
+        const outputFilePath = path.join(__dirname, "uploads", `${req.file.filename}.webp`);  // WebP形式で保存
+
+        // 画像の変換とリサイズ（WebP形式に変換）
+        await sharp(originalFilePath)
+            .resize(80)  // 幅800pxにリサイズ（高さは自動調整）
+            .toFormat("webp")  // WebP形式に変換
+            .webp({ quality: 80 })  // WebP画像の品質（80%）
+            .toFile(outputFilePath);  // 出力ファイルとして保存
+
+        // 一時ディレクトリの画像を削除
+        fs.unlinkSync(originalFilePath);
 
         // 画像の情報をデータベースに保存
+        const { originalname, mimetype } = req.file;
+        const filePath = path.join("uploads", `${req.file.filename}.webp`);
+
         await pool.query(
             "INSERT INTO schema1.images (name, type, path, user_id) VALUES ($1, $2, $3, $4)",
             [originalname, mimetype, filePath, userId]
