@@ -1,17 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gallery</title>
+    <style>
+        /* 画像を3×3で表示するためのスタイル */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);  /* 3列 */
+            gap: 10px;
+        }
+
+        .image-item {
+            text-align: center;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+        }
+
+        .form-group {
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
-    <h1>Gallery</h1>
-    <ul>
+    <h1>Welcome, <%= user.name %>!</h1>
+
+    <!-- 画像アップロードフォーム -->
+    <h2>Upload an Image</h2>
+    <% if (images.length < 9) { %>
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <label for="image">Choose an image:</label>
+            <input type="file" id="image" name="image" accept="image/*" required>
+            <button type="submit">Upload</button>
+        </form>
+    <% } else { %>
+        <p>You have reached the maximum number of uploads (9 images).</p>
+    <% } %>
+
+    <!-- 画像のグリッド表示 -->
+    <h2>Your Uploaded Images</h2>
+    <div class="image-grid">
         <% images.forEach(image => { %>
-            <li>
-                <img src="/<%= image.path %>" alt="<%= image.name %>" width="200">
+            <div class="image-item">
+                <img src="/<%= image.path %>" alt="<%= image.name %>">
                 <p><%= image.name %></p>
-            </li>
+
+                <!-- 画像編集フォーム -->
+                <form action="/edit_image" method="POST" class="form-group">
+                    <input type="hidden" name="imageId" value="<%= image.id %>">
+                    <input type="text" name="newName" placeholder="New name" required>
+                    <button type="submit">Edit</button>
+                </form>
+
+                <!-- 画像削除フォーム -->
+                <form action="/delete_image" method="POST" class="form-group">
+                    <input type="hidden" name="imageId" value="<%= image.id %>">
+                    <button type="submit" style="color: red;">Delete</button>
+                </form>
+            </div>
         <% }); %>
-    </ul>
+    </div>
+
+    <a href="/logout">Log out</a>
 </body>
 </html>

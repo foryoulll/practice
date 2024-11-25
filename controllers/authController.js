@@ -39,8 +39,14 @@ const signIn = async (req, res) => {
                     name: user.name, // schema1.usersのname
                 };
 
-                // サインイン後、アップロードページにリダイレクト
-                res.redirect("/upload_image.html");
+                // ユーザーがアップロードした画像を取得
+                const { rows: images } = await pool.query(
+                    "SELECT * FROM schema1.images WHERE user_id = $1",
+                    [user.id]
+                );
+
+                // gallery.ejs をレンダリングして画像を表示
+                res.render("gallery", { user, images });  // userを渡す
             } else {
                 res.status(401).send("<h1>Invalid credentials</h1><p><a href='/sign_in.html'>Go back to sign in</a></p>");
             }
@@ -52,6 +58,7 @@ const signIn = async (req, res) => {
         res.status(500).send("Internal server error. Please try again later.");
     }
 };
+
 
 module.exports = {
     signUp,
